@@ -497,7 +497,7 @@ def ccframe(ccobjs, *args, **kwargs):
     _check_pandas(_has_pandas)
     logfiles = []
     for ccobj in ccobjs:
-        # is ccobj an job object (unparsed), or is it a ccdata object (parsed)?
+        # Is ccobj an job object (unparsed), or is it a ccdata object (parsed)?
         if isinstance(ccobj, logfileparser.Logfile):
             jobfilename = ccobj.filename
             ccdata = ccobj.parse()
@@ -508,10 +508,8 @@ def ccframe(ccobjs, *args, **kwargs):
             raise ValueError
 
         attributes = ccdata.getattributes()
-        
         attributes.update({
             'jobfilename': jobfilename
-            
         })
         
         # temporarily remove features that split many times over and provide limited useful information, e.g. cartesian coordinates (short term solution)
