@@ -11,6 +11,8 @@ import io
 import os
 import sys
 import re
+import numpy
+
 from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
 from urllib.error import URLError
@@ -495,7 +497,7 @@ def ccframe(ccobjs, *args, **kwargs):
     _check_pandas(_has_pandas)
     logfiles = []
     for ccobj in ccobjs:
-        # Is ccobj an job object (unparsed), or is it a ccdata object (parsed)?
+        # is ccobj an job object (unparsed), or is it a ccdata object (parsed)?
         if isinstance(ccobj, logfileparser.Logfile):
             jobfilename = ccobj.filename
             ccdata = ccobj.parse()
@@ -506,12 +508,148 @@ def ccframe(ccobjs, *args, **kwargs):
             raise ValueError
 
         attributes = ccdata.getattributes()
+        
         attributes.update({
             'jobfilename': jobfilename
+            
         })
+        
+        # temporarily remove features that split many times over and provide limited useful information, e.g. cartesian coordinates (short term solution)
+        for column in ['atomcoords','geovalues','grads','scftargets','vibdisps']:
+            del attributes[column]
+
+        while True:
+            # get type for each value (column)
+            lists, dicts, strings, numbers, arrays = get_type(attributes)
+            # if only numbers and floats then don't do anything
+            if len(lists) == len(dicts) == len(arrays) == 0:
+                break
+            # otherwise split each type as appropriate
+            else:
+                format_lists(lists,attributes)
+                format_dicts(dicts,attributes)
+                format_arrays(arrays,attributes)
 
         logfiles.append(pd.Series(attributes))
-    return pd.DataFrame(logfiles)
+    df = pd.DataFrame(logfiles)
 
+    # reformat headings with leading zeroes, and remove intermediate numbers
+    rename = {}
+    n_dict = {}
+    for col_name in df:
+        s = col_name.split("   ") # split column names into multiple strings by identifiable triple space
+        if len(s) > 1: # if column isn't split, no numbers were added, i.e. no changes need to be made
+            if not s[0] in n_dict.keys(): # record an n_max and n_to_remove for each feature / set of columns in dictionary n_dict (skipped if feature has already been recorded)
+                s_columns = [] # collect a list of all the columns for this feature
+                for col in df:
+                    s2 = col.split("   ")
+                    if s[0] == s2[0]:
+                        s_columns.append(col)
+                n_max = 0 # iterate over those columns to determine n_max, the maximum number of digits in any one column
+                for column in s_columns:
+                    n = 0 
+                    s2 = column.split("   ")
+                    for char in s2[-1]:
+                        if char.isdigit(): 
+                            n += 1
+                        if n > n_max:
+                            n_max = n
+                n_to_remove = 0 # iterate over those columns to determine n_to_remove
+                s_list = [] # e.g. mosyms columns ends up as mosyms_01_XX, but there are no mosyms_02_XX columns, so n_to_remove = 1 (remove the first number in the headings)
+                while True:
+                    for column in s_columns: 
+                        s2 = column.split("   ")
+                        s_list.append(s2[1]) # append first number from each column into a list
+                    result = all(elem == s_list[0] for elem in s_list) # if all elements in the list are the same, result is True
+                    if result == True and len(s2) == 2: # if len(s2) is 2, then there is only one number, and one number to remove, so no further looping is necessary
+                        n_to_remove += 1
+                        break
+                    elif result == True and len(s2) > 2: # if len(s2) > 2, there are multiple numbers, so further looping determines if any more need removing
+                        n_to_remove += 1
+                        s_list = [] # refresh s_list
+                        for column in s_columns: 
+                            s2 = column.split("   ")
+                            del s2[1]
+                            s_list.append(s2[1])
+                    elif result == False:
+                        break
+                n_dict.update({s[0]: (n_max, n_to_remove)}) # update n_dict with feature name (key) and values as tuple (n_max, n_to_remove) for that feature
+            n_max = n_dict[s[0]][0] # select n_max from the dictionary
+            n_to_remove = n_dict[s[0]][1] # select n_to_remove from the dictionary
+            n_list = []
+            for i in range(1,len(s)):
+                n_zfill = s[i].zfill(n_max) # add leading zeroes
+                n_list.append(n_zfill)
+            while n_to_remove > 0: # iteratively remove first number in each list until no more need removing, according to n_to_remove
+                del n_list[0]
+                n_to_remove -= 1
+            if len(n_list) == 0:
+                new_name = s[0]
+            else:
+                numbers = "_".join(n_list)
+                new_name = s[0] + "_" + numbers 
+            rename.update({col_name: new_name}) # add old and new names to dictionary 
+    df = df.rename(columns=rename) # pass dictionary through df.rename command
+
+    # alphabetize and return final dataframe
+    return df.reindex(sorted(df.columns),axis=1)
 
 del find_package
+
+
+def get_type(attributes):
+# function to identify the type of the values for each key in attributes
+    temp = pd.Series(attributes)
+    lists = []
+    dicts = []
+    strings = []
+    numbers = []
+    arrays = []
+    for key in attributes.keys():
+        if type(temp.loc[key]) == list:
+            lists.append(key)
+        elif type(temp.loc[key]) == dict:   
+            dicts.append(key)
+        elif type(temp.loc[key]) == str or type(temp.loc[key]) == bool:
+            strings.append(key)
+        elif type(temp.loc[key]) == int or type(temp.loc[key]) == float or type(temp.loc[key]) == numpy.intc or type(temp.loc[key]) == numpy.int32 or type(temp.loc[key]) == numpy.float64:
+            numbers.append(key)
+        elif type(temp.loc[key]) == numpy.ndarray or type(temp.loc[key]) == numpy.array:
+            arrays.append(key)
+        else:
+            un_type = type(temp.loc[key])
+            raise UnaccountedTypeError("Following descriptor type has not been accounted for: %s. Columns with this type will not be formatted." % un_type)
+    return lists, dicts, strings, numbers, arrays
+
+class UnaccountedTypeError(Exception):
+    pass
+
+def format_dicts(dicts,attributes):
+# split dictionary into seperate columns for each key
+    for column in dicts:
+        for i in attributes[column].keys():
+            new_key = i
+            new_value = attributes[column][i]
+            attributes.update({new_key: new_value})
+        del attributes[column]  
+
+def format_lists(lists,attributes):
+# split list into seperate columns for each element
+    for column in lists:   
+        col = attributes[column]
+        for n in range(1,len(col)+1):
+            new_key = column + "   " + str(n)
+            new_value = col[n-1]
+            attributes.update({new_key: new_value})
+        del attributes[column]
+
+def format_arrays(arrays,attributes):            
+# split array into seperate columns for each element
+    for column in arrays:   
+        col = list(attributes[column])
+        for n in range(1,len(col)+1):
+            new_key = column + "   " + str(n)
+            new_value = col[n-1]
+            attributes.update({new_key: new_value})
+        del attributes[column]
+
