@@ -513,8 +513,9 @@ def ccframe(ccobjs, *args, **kwargs):
         })
 
         # temporarily remove features that split many times over and provide limited useful information, e.g. cartesian coordinates (short term solution)
-        for column in ['atomcoords','geovalues','grads','scftargets','vibdisps']:
+        for column in ['atomcoords','grads','scftargets','vibdisps']:
             del attributes[column]
+            # originally was: ['atomcoords','geovalues','grads','scftargets','vibdisps']
 
         while True:
             # get type for each value (column)
