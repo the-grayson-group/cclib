@@ -248,14 +248,10 @@ class Gaussian(logfileparser.Logfile):
             # Also, in older versions there is bo blank line (G98 regressions),
             # so we need to watch out for leaving the link.
             natom = 0
-            nhydrogen = 0
             while line.split() and not "Variables" in line and not "Leave Link" in line:
                 natom += 1
-                if line.split()[0] == "H": # at the same time we can also get the hydrogen count
-                    nhydrogen += 1
                 line = inputfile.next()
             self.set_attribute('natom', natom)
-            self.set_attribute('nhydrogen', nhydrogen)
 
         # Continuing from above, there is not always a symbolic matrix, for example
         # if the Z-matrix was in the input file. In such cases, try to match the
@@ -1931,72 +1927,45 @@ class Gaussian(logfileparser.Logfile):
         #     2  C    0.002063
         # ...
         #
-        # APT and Lowdin charges are also displayed in this way
-        if hasattr(self, "natom") and hasattr(self, "nhydrogen"):
-            if line[1:25] == "Mulliken atomic charges:" or line[1:18] == "Mulliken charges:" or \
-            line[1:57] == "Mulliken charges with hydrogens summed into heavy atoms:" or \
-            line[1:23] == "Lowdin Atomic Charges:" or line[1:16] == "Lowdin charges:" or \
-            line[1:55] == "Lowdin charges with hydrogens summed into heavy atoms:" or \
-            line[1:13] == "APT charges:" or \
-            line[1:52] == "APT charges with hydrogens summed into heavy atoms:" or \
-            line[1:37] == "Mulliken charges and spin densities:" or \
-            line[1:32] == "Mulliken atomic spin densities:":
+        if line[1:25] == "Mulliken atomic charges:" or line[1:18] == "Mulliken charges:" or \
+           line[1:23] == "Lowdin Atomic Charges:" or line[1:16] == "Lowdin charges:" or \
+           line[1:37] == "Mulliken charges and spin densities:" or \
+           line[1:32] == "Mulliken atomic spin densities:":
 
-                has_spin = 'spin densities' in line
-                has_charges = 'charges' in line
+            has_spin = 'spin densities' in line
+            has_charges = 'charges' in line
 
-                if has_charges and not hasattr(self, "atomcharges"):
-                    self.atomcharges = {}
+            if has_charges and not hasattr(self, "atomcharges"):
+                self.atomcharges = {}
 
-                if has_spin and not hasattr(self, "atomspins"):
-                    self.atomspins = {}
+            if has_spin and not hasattr(self, "atomspins"):
+                self.atomspins = {}
 
-                ones = next(inputfile)
+            ones = next(inputfile)
 
-                charges = []
-                spins = []
+            charges = []
+            spins = []
+            nline = next(inputfile)
+            while not "Sum of" in nline:
+                if has_charges:
+                    charges.append(float(nline.split()[2]))
+
+                if has_spin and has_charges:
+                    spins.append(float(nline.split()[3]))
+
+                if has_spin and not has_charges:
+                    spins.append(float(nline.split()[2]))	
+
                 nline = next(inputfile)
 
-                # calculate how many lines need iterating over based on whether property is summed or not
-                is_sum = 'summed' in line
-                if is_sum:
-                    n = self.natom - self.nhydrogen
-                else:
-                    n = self.natom
-
-                # iterate over each line and append values to a list based on what property we have
-                for i in range (0,n):
-                    if has_charges:
-                        charges.append(float(nline.split()[2]))
-                    if has_spin and has_charges:
-                        spins.append(float(nline.split()[3]))
-                    if has_spin and not has_charges:
-                        spins.append(float(nline.split()[2]))
-                    if not i == n-1:
-                        nline = next(inputfile)
-
-                # input extracted values into self.atomcharges
                 if "Mulliken" in line:
                     if has_charges:
-                        if is_sum:
-                            self.atomcharges["mulliken_sum"] = charges
-                        else:
-                            self.atomcharges["mulliken"] = charges
-                    elif has_spin:
-                        self.atomspins["mulliken_spins"] = spins
+                        self.atomcharges["mulliken"] = charges
+                    if has_spin:
+                        self.atomspins["mulliken"] = spins
 
                 elif "Lowdin" in line:
-                    if is_sum:
-                        self.atomcharges["lowdin_sum"] = charges
-                    else:
-                        self.atomcharges["lowdin"] = charges
-
-                if "APT" in line:
-                    if has_charges:
-                        if is_sum:
-                            self.atomcharges["APT_sum"] = charges
-                        else:
-                            self.atomcharges["APT"] = charges
+                    self.atomcharges["lowdin"] = charges
 
 
         if line.strip() == "Natural Population":
