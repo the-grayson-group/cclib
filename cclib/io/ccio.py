@@ -524,7 +524,7 @@ def ccframe(ccobjs, *args, **kwargs):
         attributes.update({
             'jobfilename': jobfilename
         })
-        
+
         # temporarily remove features that split many times over and provide limited useful information, e.g. cartesian coordinates (short term solution)
         for column in ['atomcoords','geovalues','grads','scftargets','vibdisps']:
             del attributes[column]
@@ -558,17 +558,17 @@ def ccframe(ccobjs, *args, **kwargs):
                         s_columns.append(col)
                 n_max = 0 # iterate over those columns to determine n_max, the maximum number of digits in any one column
                 for column in s_columns:
-                    n = 0 
+                    n = 0
                     s2 = column.split("   ")
                     for char in s2[-1]:
-                        if char.isdigit(): 
+                        if char.isdigit():
                             n += 1
                         if n > n_max:
                             n_max = n
                 n_to_remove = 0 # iterate over those columns to determine n_to_remove
                 s_list = [] # e.g. mosyms columns ends up as mosyms_01_XX, but there are no mosyms_02_XX columns, so n_to_remove = 1 (remove the first number in the headings)
                 while True:
-                    for column in s_columns: 
+                    for column in s_columns:
                         s2 = column.split("   ")
                         s_list.append(s2[1]) # append first number from each column into a list
                     result = all(elem == s_list[0] for elem in s_list) # if all elements in the list are the same, result is True
@@ -578,7 +578,7 @@ def ccframe(ccobjs, *args, **kwargs):
                     elif result == True and len(s2) > 2: # if len(s2) > 2, there are multiple numbers, so further looping determines if any more need removing
                         n_to_remove += 1
                         s_list = [] # refresh s_list
-                        for column in s_columns: 
+                        for column in s_columns:
                             s2 = column.split("   ")
                             del s2[1]
                             s_list.append(s2[1])
@@ -598,8 +598,8 @@ def ccframe(ccobjs, *args, **kwargs):
                 new_name = s[0]
             else:
                 numbers = "_".join(n_list)
-                new_name = s[0] + "_" + numbers 
-            rename.update({col_name: new_name}) # add old and new names to dictionary 
+                new_name = s[0] + "_" + numbers
+            rename.update({col_name: new_name}) # add old and new names to dictionary
     df = df.rename(columns=rename) # pass dictionary through df.rename command
 
     # alphabetize and return final dataframe
@@ -619,7 +619,7 @@ def get_type(attributes):
     for key in attributes.keys():
         if type(temp.loc[key]) == list:
             lists.append(key)
-        elif type(temp.loc[key]) == dict:   
+        elif type(temp.loc[key]) == dict:
             dicts.append(key)
         elif type(temp.loc[key]) == str or type(temp.loc[key]) == bool:
             strings.append(key)
@@ -642,11 +642,11 @@ def format_dicts(dicts,attributes):
             new_key = i
             new_value = attributes[column][i]
             attributes.update({new_key: new_value})
-        del attributes[column]  
+        del attributes[column]
 
 def format_lists(lists,attributes):
 # split list into seperate columns for each element
-    for column in lists:   
+    for column in lists:
         col = attributes[column]
         for n in range(1,len(col)+1):
             new_key = column + "   " + str(n)
@@ -654,13 +654,12 @@ def format_lists(lists,attributes):
             attributes.update({new_key: new_value})
         del attributes[column]
 
-def format_arrays(arrays,attributes):            
+def format_arrays(arrays,attributes):
 # split array into seperate columns for each element
-    for column in arrays:   
+    for column in arrays:
         col = list(attributes[column])
         for n in range(1,len(col)+1):
             new_key = column + "   " + str(n)
             new_value = col[n-1]
             attributes.update({new_key: new_value})
         del attributes[column]
-
