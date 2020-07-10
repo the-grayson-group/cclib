@@ -512,11 +512,6 @@ def ccframe(ccobjs, *args, **kwargs):
             'jobfilename': jobfilename
         })
 
-        # temporarily remove features that split many times over and provide limited useful information, e.g. cartesian coordinates (short term solution)
-        for column in ['atomcoords','grads','scftargets','vibdisps']:
-            del attributes[column]
-            # originally was: ['atomcoords','geovalues','grads','scftargets','vibdisps']
-
         while True:
             # get type for each value (column)
             lists, dicts, strings, numbers, arrays = get_type(attributes)
@@ -546,13 +541,14 @@ def ccframe(ccobjs, *args, **kwargs):
                         s_columns.append(col)
                 n_max = 0 # iterate over those columns to determine n_max, the maximum number of digits in any one column
                 for column in s_columns:
-                    n = 0
                     s2 = column.split("   ")
-                    for char in s2[-1]:
-                        if char.isdigit():
-                            n += 1
-                        if n > n_max:
-                            n_max = n
+                    for i in range(1,len(s2)): # check n_max for each number, if there are multiple
+                        n = 0
+                        for char in s2[i]:
+                            if char.isdigit():
+                                n += 1
+                            if n > n_max:
+                                n_max = n
                 n_to_remove = 0 # iterate over those columns to determine n_to_remove
                 s_list = [] # e.g. mosyms columns ends up as mosyms_01_XX, but there are no mosyms_02_XX columns, so n_to_remove = 1 (remove the first number in the headings)
                 while True:
