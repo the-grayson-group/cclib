@@ -2008,7 +2008,6 @@ class Gaussian(logfileparser.Logfile):
                             self.atomspins["APT_spin"] = spins
 >>>>>>> f02fef14... fixed missing atomspins for summed of properties
 
-
         if line.strip() == "Natural Population":
             if not hasattr(self, 'atomcharges'):
                 self.atomcharges = {}
