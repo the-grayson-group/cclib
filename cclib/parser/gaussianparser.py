@@ -1188,7 +1188,7 @@ class Gaussian(logfileparser.Logfile):
                 if line.split()[1] == "virt." and HOMO == -2:
 
                     # If there aren't any symmetries, this is a good way to find the HOMO.
-                    HOMO = len(self.moenergies[0])
+                    HOMO = len(self.moenergies[0])-1
                     self.homos = [HOMO]
                     # the LUMO is the orbital above the HOMO
                     LUMO = HOMO + 1
@@ -1211,7 +1211,7 @@ class Gaussian(logfileparser.Logfile):
             # If, at this point, self.homos is unset, then there were not
             # any alpha virtual orbitals
             if not hasattr(self, "homos"):
-                HOMO = len(self.moenergies[0])
+                HOMO = len(self.moenergies[0])-1
                 self.homos = [HOMO]
 
             if line.find('Beta') == 2:
@@ -1223,7 +1223,7 @@ class Gaussian(logfileparser.Logfile):
 
                     # If there aren't any symmetries, this is a good way to find the HOMO.
                     # Also, check for consistency if homos was already parsed.
-                    HOMO = len(self.moenergies[1])
+                    HOMO = len(self.moenergies[1])-1
                     self.homos.append(HOMO)
                     # the LUMO is the orbital above the HOMO
                     LUMO = HOMO + 1
@@ -1244,7 +1244,7 @@ class Gaussian(logfileparser.Logfile):
                 moenergy = []
                 for i in range(0,len(mo)):
                     energies = moenergies[i]
-                    n = mo[i] - 1
+                    n = mo[i]
                     moenergy.append(energies[n])
                     return moenergy
 
