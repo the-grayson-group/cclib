@@ -606,7 +606,9 @@ del find_package
 
 
 def get_type(attributes):
-# function to identify the type of the values for each key in attributes
+    """Iterates through the keys of attributes (dict) and determines what type of data the values are.
+       Sorts keys into five lists and returns them (lists, dicts, strings, numbers, arrays).
+    """
     temp = pd.Series(attributes)
     lists = []
     dicts = []
@@ -633,7 +635,7 @@ class UnaccountedTypeError(Exception):
     pass
 
 def format_dicts(dicts,attributes):
-# split dictionary into seperate columns for each key
+    """Within attributes, splits any dictionaries into seperate columns for each key"""
     for column in dicts:
         for i in attributes[column].keys():
             new_key = i
@@ -642,7 +644,7 @@ def format_dicts(dicts,attributes):
         del attributes[column]
 
 def format_lists(lists,attributes):
-# split list into seperate columns for each element
+    """Within attributes, splits any lists into seperate columns for each element"""
     for column in lists:
         col = attributes[column]
         for n in range(1,len(col)+1):
@@ -652,7 +654,7 @@ def format_lists(lists,attributes):
         del attributes[column]
 
 def format_arrays(arrays,attributes):
-# split array into seperate columns for each element
+    """Within attributes, splits any arrays into seperate columns for each element"""
     for column in arrays:
         col = list(attributes[column])
         for n in range(1,len(col)+1):
