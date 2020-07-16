@@ -1241,6 +1241,7 @@ class Gaussian(logfileparser.Logfile):
 
             # set homoenergies and lumoenergies
             def find_mo_energy(mo,moenergies):
+                """Find the energy of a specific orbital (given its index) from the list of all orbital energies"""
                 moenergy = []
                 for i in range(0,len(mo)):
                     energies = moenergies[i]
