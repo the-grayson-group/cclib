@@ -547,19 +547,52 @@ def format_arrays(arrays,attributes):
             attributes.update({f"{column}   {str(n)}": col[n-1]})
         del attributes[column]
 
+
 def ccframe(ccobjs, *args, **kwargs):
-    return "n/a"
+    """Returns a pandas.DataFrame of data attributes parsed by cclib from one
+    or more logfiles.
+
+    Inputs:
+        ccobjs - an iterable of either cclib jobs (from ccopen) or data (from
+        job.parse()) objects
+
+    Returns:
+        a pandas.DataFrame
+    """
+    _check_pandas(_has_pandas)
+    logfiles = []
+    for ccobj in ccobjs:
+        # Is ccobj an job object (unparsed), or is it a ccdata object (parsed)?
+        if isinstance(ccobj, logfileparser.Logfile):
+            jobfilename = ccobj.filename
+            ccdata = ccobj.parse()
+        elif isinstance(ccobj, data.ccData):
+            jobfilename = None
+            ccdata = ccobj
+        else:
+            raise ValueError
+
+        attributes = ccdata.getattributes()
+        attributes.update({
+            'jobfilename': jobfilename
+        })
+
+        logfiles.append(pd.Series(attributes))
+    return pd.DataFrame(logfiles)
+
 
 def ccframe_format(ccobjs, to_remove=[], *args, **kwargs):
     """Returns a pandas.DataFrame of data attributes parsed by cclib from one
     or more logfiles. Any data attrbites that are dictionaries or arrays are 
     split into individual columns containing strings and numbers. Headers are
-    formatted with numbers and alphabetized.
+    formatted with numbers and alphabetized. Some features can be optionally
+    removed by providing a list of headers.
 
     Inputs:
         ccobjs - an iterable of either cclib jobs (from ccopen) or data (from
         job.parse()) objects
-        to_remove = a list of features to be removed from the outputted dataframe
+        to_remove = a list of feature headers to be removed from the outputted 
+        dataframe (defaults to no removals)
 
     Returns:
         a pandas.DataFrame
@@ -660,5 +693,6 @@ def ccframe_format(ccobjs, to_remove=[], *args, **kwargs):
     df = df.rename(columns=rename) # pass dictionary through df.rename command
     # alphabetize and return final dataframe
     return df.reindex(sorted(df.columns),axis=1)
+
 
 del find_package
