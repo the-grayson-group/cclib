@@ -594,11 +594,9 @@ def ccframe(ccobjs, *args, **kwargs):
             if len(n_list) == 0:
                 new_name = s[0]
             else:
-                numbers = "_".join(n_list)
-                new_name = s[0] + "_" + numbers
+                new_name = s[0] + "_" + "_".join(n_list)
             rename.update({col_name: new_name}) # add old and new names to dictionary
     df = df.rename(columns=rename) # pass dictionary through df.rename command
-
     # alphabetize and return final dataframe
     return df.reindex(sorted(df.columns),axis=1)
 
@@ -638,9 +636,7 @@ def format_dicts(dicts,attributes):
     """Within attributes, splits any dictionaries into seperate columns for each key"""
     for column in dicts:
         for i in attributes[column].keys():
-            new_key = i
-            new_value = attributes[column][i]
-            attributes.update({new_key: new_value})
+            attributes.update({f"{column}_{i}": attributes[column][i]})
         del attributes[column]
 
 def format_lists(lists,attributes):
@@ -648,9 +644,7 @@ def format_lists(lists,attributes):
     for column in lists:
         col = attributes[column]
         for n in range(1,len(col)+1):
-            new_key = column + "   " + str(n)
-            new_value = col[n-1]
-            attributes.update({new_key: new_value})
+            attributes.update({f"{column}   {str(n)}": col[n-1]})
         del attributes[column]
 
 def format_arrays(arrays,attributes):
@@ -658,7 +652,5 @@ def format_arrays(arrays,attributes):
     for column in arrays:
         col = list(attributes[column])
         for n in range(1,len(col)+1):
-            new_key = column + "   " + str(n)
-            new_value = col[n-1]
-            attributes.update({new_key: new_value})
+            attributes.update({f"{column}   {str(n)}": col[n-1]})
         del attributes[column]
