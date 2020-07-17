@@ -482,14 +482,71 @@ def _check_pandas(found_pandas):
     if not found_pandas:
         raise ImportError("You must install `pandas` to use this function")
 
+def get_type(attributes):
+    """Iterates through the keys of attributes (dict) and determines what type of data the values are.
+       Sorts keys into five lists and returns them (lists, dicts, strings, numbers, arrays).
+    """
+    temp = pd.Series(attributes)
+    lists = []
+    dicts = []
+    strings = []
+    numbers = []
+    arrays = []
+    for key in attributes.keys():
+        if type(temp.loc[key]) == list:
+            lists.append(key)
+        elif type(temp.loc[key]) == dict:
+            dicts.append(key)
+        elif type(temp.loc[key]) == str or type(temp.loc[key]) == bool:
+            strings.append(key)
+        elif type(temp.loc[key]) == int or type(temp.loc[key]) == float or type(temp.loc[key]) == numpy.intc or type(temp.loc[key]) == numpy.int32 or type(temp.loc[key]) == numpy.float64:
+            numbers.append(key)
+        elif type(temp.loc[key]) == numpy.ndarray or type(temp.loc[key]) == numpy.array:
+            arrays.append(key)
+        else:
+            un_type = type(temp.loc[key])
+            raise UnaccountedTypeError("Following descriptor type has not been accounted for: %s. Columns with this type will not be formatted." % un_type)
+    return lists, dicts, strings, numbers, arrays
+
+class UnaccountedTypeError(Exception):
+    pass
+
+def format_dicts(dicts,attributes):
+    """Within attributes, splits any dictionaries into seperate columns for each key"""
+    for column in dicts:
+        for i in attributes[column].keys():
+            attributes.update({f"{column}_{i}": attributes[column][i]})
+        del attributes[column]
+
+def format_lists(lists,attributes):
+    """Within attributes, splits any lists into seperate columns for each element"""
+    for column in lists:
+        col = attributes[column]
+        for n in range(1,len(col)+1):
+            attributes.update({f"{column}   {str(n)}": col[n-1]})
+        del attributes[column]
+
+def format_arrays(arrays,attributes):
+    """Within attributes, splits any arrays into seperate columns for each element"""
+    for column in arrays:
+        col = list(attributes[column])
+        for n in range(1,len(col)+1):
+            attributes.update({f"{column}   {str(n)}": col[n-1]})
+        del attributes[column]
 
 def ccframe(ccobjs, *args, **kwargs):
+    return "n/a"
+
+def ccframe_format(ccobjs, to_remove=[], *args, **kwargs):
     """Returns a pandas.DataFrame of data attributes parsed by cclib from one
-    or more logfiles.
+    or more logfiles. Any data attrbites that are dictionaries or arrays are 
+    split into individual columns containing strings and numbers. Headers are
+    formatted with numbers and alphabetized.
 
     Inputs:
         ccobjs - an iterable of either cclib jobs (from ccopen) or data (from
         job.parse()) objects
+        to_remove = a list of features to be removed from the outputted dataframe
 
     Returns:
         a pandas.DataFrame
@@ -511,6 +568,10 @@ def ccframe(ccobjs, *args, **kwargs):
         attributes.update({
             'jobfilename': jobfilename
         })
+
+        for column in to_remove:
+            if column in attributes:
+                del attributes[column]
 
         while True:
             # get type for each value (column)
@@ -588,56 +649,3 @@ def ccframe(ccobjs, *args, **kwargs):
     return df.reindex(sorted(df.columns),axis=1)
 
 del find_package
-
-
-def get_type(attributes):
-    """Iterates through the keys of attributes (dict) and determines what type of data the values are.
-       Sorts keys into five lists and returns them (lists, dicts, strings, numbers, arrays).
-    """
-    temp = pd.Series(attributes)
-    lists = []
-    dicts = []
-    strings = []
-    numbers = []
-    arrays = []
-    for key in attributes.keys():
-        if type(temp.loc[key]) == list:
-            lists.append(key)
-        elif type(temp.loc[key]) == dict:
-            dicts.append(key)
-        elif type(temp.loc[key]) == str or type(temp.loc[key]) == bool:
-            strings.append(key)
-        elif type(temp.loc[key]) == int or type(temp.loc[key]) == float or type(temp.loc[key]) == numpy.intc or type(temp.loc[key]) == numpy.int32 or type(temp.loc[key]) == numpy.float64:
-            numbers.append(key)
-        elif type(temp.loc[key]) == numpy.ndarray or type(temp.loc[key]) == numpy.array:
-            arrays.append(key)
-        else:
-            un_type = type(temp.loc[key])
-            raise UnaccountedTypeError("Following descriptor type has not been accounted for: %s. Columns with this type will not be formatted." % un_type)
-    return lists, dicts, strings, numbers, arrays
-
-class UnaccountedTypeError(Exception):
-    pass
-
-def format_dicts(dicts,attributes):
-    """Within attributes, splits any dictionaries into seperate columns for each key"""
-    for column in dicts:
-        for i in attributes[column].keys():
-            attributes.update({f"{column}_{i}": attributes[column][i]})
-        del attributes[column]
-
-def format_lists(lists,attributes):
-    """Within attributes, splits any lists into seperate columns for each element"""
-    for column in lists:
-        col = attributes[column]
-        for n in range(1,len(col)+1):
-            attributes.update({f"{column}   {str(n)}": col[n-1]})
-        del attributes[column]
-
-def format_arrays(arrays,attributes):
-    """Within attributes, splits any arrays into seperate columns for each element"""
-    for column in arrays:
-        col = list(attributes[column])
-        for n in range(1,len(col)+1):
-            attributes.update({f"{column}   {str(n)}": col[n-1]})
-        del attributes[column]
