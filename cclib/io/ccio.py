@@ -515,7 +515,7 @@ def format_dicts(dicts,attributes):
     """Within attributes, splits any dictionaries into seperate columns for each key"""
     for column in dicts:
         for i in attributes[column].keys():
-            attributes.update({f"{column}_{i}": attributes[column][i]})
+            attributes.update({'{}_{}'.format(column,i): attributes[column][i]})
         del attributes[column]
 
 def format_lists(lists,attributes):
@@ -523,7 +523,7 @@ def format_lists(lists,attributes):
     for column in lists:
         col = attributes[column]
         for n in range(1,len(col)+1):
-            attributes.update({f"{column}   {str(n)}": col[n-1]})
+            attributes.update({'{}   {}'.format(column,str(n)): col[n-1]})
         del attributes[column]
 
 def format_arrays(arrays,attributes):
@@ -531,7 +531,7 @@ def format_arrays(arrays,attributes):
     for column in arrays:
         col = list(attributes[column])
         for n in range(1,len(col)+1):
-            attributes.update({f"{column}   {str(n)}": col[n-1]})
+            attributes.update({'{}   {}'.format(column,str(n)): col[n-1]})
         del attributes[column]
 
 
