@@ -56,7 +56,10 @@ class ccData:
         geovalues -- current values for convergence of geometry optmization (array[1])
         grads -- current values of forces (gradients) in geometry optimization (array[3])
         hessian -- elements of the force constant matrix (array[1])
+        homoenergies -- molecular orbital energy of HOMO(s) (array[1])
         homos -- molecular orbital indices of HOMO(s) (array[1])
+        lumoenergies -- molecular orbital energy of HOMO(s) (array[1])
+        lumos -- molecular orbital indices of LUMO(s) (array[1])
         metadata -- various metadata about the package and computation (dict)
         mocoeffs -- molecular orbital coefficients (list of arrays[2])
         moenergies -- molecular orbital energies (list of arrays[1], eV)
@@ -138,7 +141,10 @@ class ccData:
        "geovalues":        Attribute(numpy.ndarray,    'geometric values',            'optimization'),
        "grads":            Attribute(numpy.ndarray,    'TBD',                         'N/A'),
        "hessian":          Attribute(numpy.ndarray,    'hessian matrix',              'vibrations'),
+       "homoenergies":     Attribute(numpy.ndarray,    'homoenergies',                'properties:orbitals'),
        "homos":            Attribute(numpy.ndarray,    'homos',                       'properties:orbitals'),
+       "lumoenergies":     Attribute(numpy.ndarray,    'lumoenergies',                'properties:orbitals'),
+       "lumos":            Attribute(numpy.ndarray,    'lumos',                       'properties:orbitals'),
        "metadata":         Attribute(dict,             'TBD',                         'N/A'),
        "mocoeffs":         Attribute(list,             'coeffs',                      'properties:orbitals'),
        "moenergies":       Attribute(list,             'energies',                    'properties:orbitals'),

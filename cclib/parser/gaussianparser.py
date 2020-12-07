@@ -1245,8 +1245,11 @@ class Gaussian(logfileparser.Logfile):
 
             if hasattr(self, "homos") and hasattr(self, "moenergies"):
                 self.homoenergies = find_mo_energy(self.homos,self.moenergies)
-
-            if hasattr(self, "lumos") and hasattr(self, "moenergies"):
+                lumos = []
+                for homo in self.homos:
+                    lumo = homo + 1
+                    lumos.append(lumo)
+                    self.lumos = lumos
                 self.lumoenergies = find_mo_energy(self.lumos,self.moenergies)
 
         # Start of the IR/Raman frequency section.
