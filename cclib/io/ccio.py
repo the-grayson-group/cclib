@@ -12,6 +12,25 @@ import os
 import sys
 import re
 import numpy
+<<<<<<< HEAD
+=======
+
+from tempfile import NamedTemporaryFile
+
+# We want this as long as we need to support both Python 2 and 3.
+from six import string_types
+
+# Python 2->3 changes the default file object hierarchy.
+if sys.version_info[0] == 2:
+    fileclass = file
+
+    from urllib2 import urlopen, URLError
+else:
+    fileclass = io.IOBase
+
+    from urllib.request import urlopen
+    from urllib.error import URLError
+>>>>>>> 713ca065cab21deda4d57146a669c3b70d2eb904
 
 from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
