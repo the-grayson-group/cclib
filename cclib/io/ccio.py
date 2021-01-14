@@ -11,8 +11,6 @@ import io
 import os
 import sys
 import re
-import numpy
-
 from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
 from urllib.error import URLError
