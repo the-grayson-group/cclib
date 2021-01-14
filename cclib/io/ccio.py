@@ -12,8 +12,6 @@ import os
 import sys
 import re
 import numpy
-<<<<<<< HEAD
-=======
 
 from tempfile import NamedTemporaryFile
 
@@ -30,7 +28,6 @@ else:
 
     from urllib.request import urlopen
     from urllib.error import URLError
->>>>>>> 713ca065cab21deda4d57146a669c3b70d2eb904
 
 from tempfile import NamedTemporaryFile
 from urllib.request import urlopen
