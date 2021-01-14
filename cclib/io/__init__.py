@@ -22,7 +22,6 @@ from cclib.io.xyzwriter import XYZ as XYZWriter
 #   from cclib.io import ccwrite
 #   from cclib.io import URL_PATTERN
 from cclib.io.ccio import ccframe
-from cclib.io.ccio import ccframe_format
 from cclib.io.ccio import ccopen
 from cclib.io.ccio import ccread
 from cclib.io.ccio import ccwrite
