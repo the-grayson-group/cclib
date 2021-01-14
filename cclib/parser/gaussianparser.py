@@ -608,7 +608,7 @@ class Gaussian(logfileparser.Logfile):
             while not line[1:30] == 'ONIOM: Integrating ONIOM file':
                 line = inputfile.next()
 
-        # With the gfinput keyword, the atomic basis set functios are:
+        # With the gfinput keyword, the atomic basis set functions are:
         #
         # AO basis set in the form of general basis input (Overlap normalization):
         #  1 0
@@ -1943,7 +1943,6 @@ class Gaussian(logfileparser.Logfile):
                 prop - property type to be extracted as a
                 string (e.g. Mulliken, Lowdin, APT).
             """
-
             has_spin = 'spin' in line.lower()
             has_charges = 'charges' in line.lower()
             if has_charges and not hasattr(self, "atomcharges"):
