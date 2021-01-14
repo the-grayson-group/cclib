@@ -1236,6 +1236,25 @@ class Gaussian(logfileparser.Logfile):
 
             self.moenergies = [numpy.array(x, "d") for x in self.moenergies]
 
+            # set homoenergies and lumoenergies
+            def find_mo_energy(mo,moenergies):
+                """Find the energy of a specific orbital (given its index) from the list of all orbital energies"""
+                moenergy = []
+                for i in range(0,len(mo)):
+                    energies = moenergies[i]
+                    n = mo[i]
+                    moenergy.append(energies[n])
+                    return moenergy
+
+            if hasattr(self, "homos") and hasattr(self, "moenergies"):
+                self.homoenergies = find_mo_energy(self.homos,self.moenergies)
+                lumos = []
+                for homo in self.homos:
+                    lumo = homo + 1
+                    lumos.append(lumo)
+                    self.lumos = lumos
+                self.lumoenergies = find_mo_energy(self.lumos,self.moenergies)
+
         # Start of the IR/Raman frequency section.
         # Caution is advised here, as additional frequency blocks
         #   can be printed by Gaussian (with slightly different formats),
